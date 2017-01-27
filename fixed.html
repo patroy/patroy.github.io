@@ -1,0 +1,169 @@
+<!doctype html>
+
+<html>
+
+<head>
+   <meta charset="utf-8">
+
+      <title>Flowplayer · Speed method with UI widgets</title>
+   
+   <!-- optimize mobile versions -->
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+      <!-- Flowplayer skin -->
+   <link rel="stylesheet" href="//releases.flowplayer.org/7.0.0/skin/skin.css">
+   
+   <!-- Minimal styling for this standalone page, can be removed -->
+   <link rel="stylesheet" href="http://demos.flowplayer.org/media/css/demo.css">
+   <!-- Syntax highlighting of source code, can be removed -->
+   <link rel="stylesheet" href="http://demos.flowplayer.org/media/css/pygments.css">
+   
+<style>
+#content {
+  width: 70%;
+}
+
+.flowplayer {
+  background-color: #333;
+/*  background-image: url(//d12zt1n3pd4xhr.cloudfront.net/img/ccc.jpg);
+*/}
+.flowplayer .fp-color {
+  background-color: #a1e1ff;
+}
+.flowplayer .fp-color-play {
+  fill: #a1e1ff;
+}
+
+/* initially hide speed buttons while they cannot be used */
+.is-splash.flowplayer .buttons, .is-loading.flowplayer .buttons {
+  display: none;
+}
+.flowplayer .buttons {
+  position: absolute;
+  right: 1em;
+  bottom: 4em;
+  z-index: 1; /* make clickable */
+  display: block;
+  filter: alpha(opacity=100);
+  opacity: 1;
+}
+.is-mouseout.flowplayer .buttons {
+  filter: alpha(opacity=0);
+  opacity: 0;
+  /* same transition as other ui elements like fullscreen */
+  -webkit-transition: opacity .15s .3s;
+  -moz-transition: opacity .15s .3s;
+  transition: opacity .15s .3s;
+}
+.flowplayer .buttons span {
+  padding: 0.5ex;
+  margin: 0.5ex;
+  width: 3.5em;
+  display: inline-block;
+  text-align: center;
+  font-weight: bold;
+  background-color: #eee;
+  cursor: pointer;
+  -webkit-border-radius: 1ex;
+  -moz-border-radius: 1ex;
+  border-radius: 1ex;
+}
+.flowplayer .buttons span.active {
+  color: #00abcd;
+  background-color: #666;
+  cursor: default;
+}
+</style>
+
+         <!-- Flowplayer library -->
+   <script src="//releases.flowplayer.org/7.0.0/flowplayer.min.js"></script>
+         <!-- The hlsjs plugin for playback of HLS without Flash in modern browsers -->
+   <script src="//releases.flowplayer.org/hlsjs/flowplayer.hlsjs.min.js"></script>
+            
+   
+<script>
+// global speed widgets setup applying to all players on page
+flowplayer(function (api, root) {
+  var speedelement = root.querySelector(".buttons"),
+      buttonElements = speedelement.getElementsByTagName("span"),
+      buttons = [],
+      i;
+
+  for (i = 0; i < buttonElements.length; i += 1) {
+    buttons.push(buttonElements[i]);
+  };
+
+  api.on("load", function (e, api) {
+    // remove speed buttons if playback rate changes are not available
+    if (api.engine.engineName == "flash" || !flowplayer.support.inlineVideo) {
+      speedelement.parentNode.removeChild(speedelement);
+    }
+
+  }).on("speed", function (e, api, rate) {
+    // mark the current speed button as active
+    var i;
+
+    speedelement.querySelector(".active").removeAttribute("class");
+    for (i = 0; i < api.conf.speeds.length; i += 1) {
+      if (api.conf.speeds[i] == rate) {
+        buttons[i].className = "active";
+        break;
+      }
+    }
+  });
+
+  // bind speed() call to click on buttons
+  buttons.forEach(function (button) {
+
+    button.onclick = function () {
+      var i;
+
+      if (button.classNme != "active") {
+        for (i = 0; i < api.conf.speeds.length; i += 1) {
+          if (buttons[i] === button) {
+            api.speed(api.conf.speeds[i]);
+            break;
+          }
+        }
+      }
+    };
+
+  });
+
+});
+
+
+// install a sample player once the DOM is ready
+window.onload = function () {
+
+  flowplayer("#player", {
+    // speeds: [0.25, 0.5, 1, 1.5, 2], // default
+    ratio: 3/4,
+    clip: {
+      sources: [{
+        type: "video/mp4",
+        src: "fixed.mp4",
+        engine: "html5" // fail over to next in flash mode
+      }]
+    }
+  });
+
+};
+</script>
+
+</head>
+
+<body>
+
+<div id="player" class="fp-slim fp-outlined no-buffer">
+   <div class="buttons">
+      <span>0.25x</span>
+      <span>0.5x</span>
+      <span class="active">1x</span>
+      <span>1.5x</span>
+      <span>2x</span>
+   </div>
+</div>
+
+</body>
+</html>
